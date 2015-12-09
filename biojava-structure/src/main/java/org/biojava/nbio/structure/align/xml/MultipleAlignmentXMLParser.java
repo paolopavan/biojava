@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.xml;
 
 import java.io.IOException;
@@ -109,7 +129,6 @@ public class MultipleAlignmentXMLParser {
 			MultipleAlignmentEnsemble ensemble) {
 
 		MultipleAlignment msa = new MultipleAlignmentImpl(ensemble);
-		List<Matrix4d> transforms = new ArrayList<Matrix4d>();
 		NodeList children = root.getChildNodes();
 		
 		for (int i=0; i<children.getLength(); i++) {
@@ -119,17 +138,9 @@ public class MultipleAlignmentXMLParser {
 			if (child.getNodeName().equals("BlockSet")){
 				parseBlockSet(child, msa);
 			}
-			else if (child.getNodeName().equals("Matrix4d")){
-				Matrix4d t = parseMatrix4d(child);
-				transforms.add(t);
-			}
 			else if (child.getNodeName().equals("ScoresCache")){
 				parseScoresCache(child, msa);
 			}
-		}
-		//Because if it is 0 means that there were no transformations
-		if (transforms.size() != 0){
-			msa.setTransformations(transforms);
 		}
 		return msa;
 	}

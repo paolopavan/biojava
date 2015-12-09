@@ -70,6 +70,7 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 	private List<EntitySrcSyn> entitySrcSyns;
 	private List<StructConn> structConn;
 	private List<StructNcsOper> structNcsOper;
+	private List<StructRefSeqDif> sequenceDifs;
 
 	/**
 	 * A map of asym ids (internal chain ids) to strand ids (author chain ids) 
@@ -582,6 +583,7 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 		entitySrcSyns = new ArrayList<EntitySrcSyn>();
 		structConn = new ArrayList<StructConn>();
 		structNcsOper = new ArrayList<StructNcsOper>();
+		sequenceDifs = new ArrayList<StructRefSeqDif>();
 	}
 
 
@@ -748,17 +750,10 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 				it = pdbChains.iterator();
 				while (it.hasNext()) {
 					Chain chain = it.next();
-					GroupType predominantGroupType = StructureTools.getPredominantGroupType(chain);
 					if (StructureTools.isChainWaterOnly(chain)) {
 						it.remove();
 						logger.warn("Chain with chain id {} (asym id {}) and {} residues, contains only waters. Will ignore the chain because it doesn't fit into the BioJava structure data model.",
 								chain.getChainID(),chain.getInternalChainID(),chain.getAtomGroups().size());
-					}
-					else if (predominantGroupType != GroupType.AMINOACID && 
-							 predominantGroupType!=GroupType.NUCLEOTIDE ) {
-						logger.warn("Chain with chain id {} (asym id {}) and {} residues, does not seem to be polymeric. Will ignore the chain because it doesn't fit into the BioJava structure data model.",
-								chain.getChainID(),chain.getInternalChainID(),chain.getAtomGroups().size());
-						it.remove();
 					}
 				}
 			}
@@ -847,6 +842,42 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 		if (ncsOperators.size()>0) {
 			structure.getCrystallographicInfo().setNcsOperators(
 					ncsOperators.toArray(new Matrix4d[ncsOperators.size()]));
+		}
+
+
+		Map<String,List<SeqMisMatch>> misMatchMap = new HashMap<String, List<SeqMisMatch>>();
+		for (StructRefSeqDif sdif : sequenceDifs) {
+			SeqMisMatch misMatch = new SeqMisMatchImpl();
+			misMatch.setDetails(sdif.getDetails());
+
+			String insCode = sdif.getPdbx_pdb_ins_code();
+			if ( insCode != null && insCode.equals("?"))
+				insCode = null;
+			misMatch.setInsCode(insCode);
+			misMatch.setOrigGroup(sdif.getDb_mon_id());
+			misMatch.setPdbGroup(sdif.getMon_id());
+			misMatch.setPdbResNum(sdif.getPdbx_auth_seq_num());
+			misMatch.setUniProtId(sdif.getPdbx_seq_db_accession_code());
+			misMatch.setSeqNum(sdif.getSeq_num());
+
+
+			List<SeqMisMatch> mms = misMatchMap.get(sdif.getPdbx_pdb_strand_id());
+			if ( mms == null) {
+				mms = new ArrayList<SeqMisMatch>();
+				misMatchMap.put(sdif.getPdbx_pdb_strand_id(),mms);
+			}
+			mms.add(misMatch);
+
+		}
+
+		for (String chainId : misMatchMap.keySet()){
+			try {
+				Chain c = structure.getChainByPDB(chainId);
+				c.setSeqMisMatches(misMatchMap.get(chainId));
+			} catch (Exception e){
+				logger.warn("could not set mismatches for chain " + chainId);
+
+			}
 		}
 		
 	}
@@ -1092,6 +1123,27 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 
 		return structure;
 	}
+
+	@Override
+	public void newDatabasePDBrevRecord(DatabasePdbrevRecord record) {
+
+		PDBHeader header = structure.getPDBHeader();
+
+		if ( header == null) {
+			header = new PDBHeader();
+			structure.setPDBHeader(header);
+		}
+
+		List<DatabasePdbrevRecord> revRecords = header.getRevisionRecords();
+		if ( revRecords == null) {
+			revRecords = new ArrayList<DatabasePdbrevRecord>();
+			header.setRevisionRecords(revRecords);
+		}
+		revRecords.add(record);
+
+
+	}
+
 
 	@Override
 	public void newDatabasePDBrev(DatabasePDBrev dbrev) {
@@ -1410,6 +1462,11 @@ public class SimpleMMcifConsumer implements MMcifConsumer {
 
 		structure.setDBRefs(dbrefs);
 
+	}
+
+	@Override
+	public void newStructRefSeqDif(StructRefSeqDif sref) {
+		sequenceDifs.add(sref);
 	}
 
 	private static Chain getChainFromList(List<Chain> chains, String name){

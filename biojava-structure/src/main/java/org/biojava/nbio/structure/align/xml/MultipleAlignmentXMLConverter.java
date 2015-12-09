@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.xml;
 
 import java.io.IOException;
@@ -10,8 +30,8 @@ import org.biojava.nbio.structure.align.multiple.Block;
 import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.multiple.ScoresCache;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 
 /**
  * Helper methods to convert all the hierarchy levels of a MultipleAlignment
@@ -48,12 +68,6 @@ public class MultipleAlignmentXMLConverter {
 		
 		for(BlockSet bs:msa.getBlockSets()) {
 			printXMLblockSet(xml, bs);
-		}
-		
-		if (msa.getTransformations() != null){
-			for(Matrix4d t:msa.getTransformations()){
-				printXMLmatrix4d(xml, t);
-			}
 		}
 		printXMLscoresCache(xml,msa);
 

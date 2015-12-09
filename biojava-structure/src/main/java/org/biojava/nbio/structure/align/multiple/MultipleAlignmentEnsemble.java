@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple;
 
 import java.util.List;
@@ -29,7 +49,7 @@ public interface MultipleAlignmentEnsemble extends ScoresCache {
 	 * @return MultipleAlignmentEnsemble identical copy of this object.
 	 */
 	public MultipleAlignmentEnsemble clone();
-	
+
 	/**
 	 * Returns the name of the multiple structure alignment algorithm that 
 	 * created the MultipleAlignment objects.
@@ -135,17 +155,25 @@ public interface MultipleAlignmentEnsemble extends ScoresCache {
 	 * 
 	 * @return List of MultipleAlignment in the ensemble.
 	 * @see #setMultipleAlignments()
-	 * @see #getOptimalMultipleAlignment()
 	 */
 	public List<MultipleAlignment> getMultipleAlignments();
+
+	/**
+	 * Returns the MultipleAlignments at the specified index 
+	 * in the ensemble. Throws an exception equivalently to
+	 * accessing an index of a List
+	 * 
+	 * @return MultipleAlignment at the index in the ensemble.
+	 * @see #setMultipleAlignments()
+	 */
+	public MultipleAlignment getMultipleAlignment(int index);
 
 	/**
 	 * Set the List of MultipleAlignments in the ensemble.
 	 * 
 	 * @param alignments List of MultipleAlignments that are part of the 
 	 * ensemble.
-	 * @see #getMultipleAlignments()
-	 * @see #getOptimalMultipleAlignment()
+	 * @see #addMultipleAlignment(MultipleAlignment)
 	 */
 	public void setMultipleAlignments(List<MultipleAlignment> alignments);
 
@@ -156,7 +184,7 @@ public interface MultipleAlignmentEnsemble extends ScoresCache {
 	 * @param alignment
 	 */
 	public void addMultipleAlignment(MultipleAlignment alignment);
-	
+
 	/**
 	 * Returns the number of aligned structures in the MultipleAlignments.
 	 * 
@@ -171,7 +199,7 @@ public interface MultipleAlignmentEnsemble extends ScoresCache {
 	 * @return long creation time, or null if unset
 	 */
 	public Long getIoTime();
-	
+
 	/**
 	 * Set the IO time to load this object
 	 * @param millis
@@ -186,7 +214,7 @@ public interface MultipleAlignmentEnsemble extends ScoresCache {
 	 * @see #getIoTime()
 	 */
 	public Long getCalculationTime();
-	
+
 	/**
 	 * Set the running time spent to calculate this alignment.
 	 * 

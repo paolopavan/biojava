@@ -1,18 +1,37 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple;
 
 import java.util.List;
 
-import javax.vecmath.Matrix4d;
+import org.biojava.nbio.structure.Atom;
 
 /**
  * A MultipleAlignment is a Data Structure to store the core information of a 
  * multiple structure alignment, as a return type.
  * <p>
  * Each alignment is described as a collection of:
- * <ul><li>{@link BlockSet}s that define the aligned positions,
+ * <ul><li>{@link BlockSet}s that define the aligned positions and 3D 
+ * 		superposition,
  * <li>Structure identifiers (i,e. Atom arrays, structure names),
- * <li>Information about the 3D superimposition in a set of 4D transformation 
- * matrices,
  * <li>Creation properties (algorithm, version, etc).
  * </ul>
  * A collection of MultipleAlignments that share the same structures and 
@@ -26,7 +45,7 @@ import javax.vecmath.Matrix4d;
  * 
  */
 public interface MultipleAlignment extends ScoresCache {
-	
+
 	/**
 	 * Creates and returns an identical copy of this alignment, including a 
 	 * deep copy of all constituent BlockSets.
@@ -34,27 +53,27 @@ public interface MultipleAlignment extends ScoresCache {
 	 * @return MultipleAlignment identical copy of this object.
 	 */
 	public MultipleAlignment clone();
-	
+
 	/** 
-     * Returns the parent Ensemble of the MultipleAlignment.
-     * Returns null if there is no referenced object.
-     * 
-     * @return MultipleAlignmentEnsemble the parent MultipleAlignment of the 
-     * BlockSet, or null.
-     * @see #setEnsemble(MultipleAlignmentEnsemble)
-     */
+	 * Returns the parent Ensemble of the MultipleAlignment.
+	 * Returns null if there is no referenced object.
+	 * 
+	 * @return MultipleAlignmentEnsemble the parent MultipleAlignment of the 
+	 * BlockSet, or null.
+	 * @see #setEnsemble(MultipleAlignmentEnsemble)
+	 */
 	public MultipleAlignmentEnsemble getEnsemble();
-	
+
 	/** 
-     * Set the back-reference to its parent Ensemble.
-     * <p>
-     * Neither removes this alignment from its previous ensemble, if any, nor
-     * adds it to the new parent. Calling code should assure that links to
-     * and from the ensemble are consistent and free of memory leaks.
-     * 
-     * @param parent the parent MultipleAlignmentEnsemble.
-     * @see #getEnsemble()
-     */
+	 * Set the back-reference to its parent Ensemble.
+	 * <p>
+	 * Neither removes this alignment from its previous ensemble, if any, nor
+	 * adds it to the new parent. Calling code should assure that links to
+	 * and from the ensemble are consistent and free of memory leaks.
+	 * 
+	 * @param parent the parent MultipleAlignmentEnsemble.
+	 * @see #getEnsemble()
+	 */
 	public void setEnsemble(MultipleAlignmentEnsemble parent);
 
 	/**
@@ -69,6 +88,18 @@ public interface MultipleAlignment extends ScoresCache {
 	public List<BlockSet> getBlockSets();
 
 	/**
+	 * Returns the BlockSet with the specified index of the MultipleAlignment.
+	 * Throws an Exception if the index is out of bounds, like accessing a 
+	 * normal List.
+	 * 
+	 * @param index of the BlockSet
+	 * @return BlockSets at the specified index
+	 * @see #getBlocks()
+	 * @see #getBlockSets()
+	 */
+	public BlockSet getBlockSet(int index);
+
+	/**
 	 * Sets the List of BlockSet List of the specified alignment.
 	 * 
 	 * @param blockSets the List of BlockSets that describe the aligned 
@@ -79,6 +110,8 @@ public interface MultipleAlignment extends ScoresCache {
 
 	/**
 	 * Convenience method to get a List of all Blocks from all BlockSets.
+	 * Modifications of this List will not alter the MultipleAlignment,
+	 * but modifications to the Blocks will.
 	 * 
 	 * @return List of Blocks
 	 * @see #getBlockSets()
@@ -86,33 +119,28 @@ public interface MultipleAlignment extends ScoresCache {
 	public List<Block> getBlocks();
 
 	/**
-	 * Returns a transformation 4D matrix for each structure giving the
-	 * 3D superposition information of the multiple structure alignment.
-	 * <p>
-	 * Individual BlockSets may override the transformation matrix for 
-	 * particular parts of the alignment. Flexible alignments will generally
-	 * return null from this method, while rigid-body methods would typically
-	 * store the transformation matrices here as well as in the only BlockSet: 
-	 * {@link BlockSet#getTransformations()}.
+	 * Returns the Block with the specified index of the MultipleAlignment.
+	 * Throws an Exception if the index is out of bounds, like accessing a 
+	 * normal List.
 	 * 
-	 * @return the 3D superposition information of the alignment or null
-	 * 			if flexible
+	 * @param index of the BlockSet
+	 * @return Block at the specified index
+	 * @see #getBlocks()
+	 * @see #getBlockSets()
 	 */
-	public List<Matrix4d> getTransformations();
-	
+	public Block getBlock(int index);
+
 	/**
-	 * Set a new superposition for the structures.
-	 * <p>
-	 * This may trigger other properties to update which depend on the 
-	 * superposition. In particular, the list of scores should be reset by
-	 * implementations after changing the transformation matrices.
+	 * Returns the array of Atoms for each structure from its parent
+	 * Ensemble.
+	 * Throws an Exception if the parent ensemble is null or the Atom 
+	 * variables are not previously set.
 	 * 
-	 * @param matrices 4D
-	 * @throws IllegalArgumentException when the size of the alignment and 
-	 * the size of transformations do not match.
+	 * @return List of Atom arrays
+	 * @see #getEnsemble()
 	 */
-	public void setTransformations(List<Matrix4d> transformations);
-	
+	public List<Atom[]> getAtomArrays();
+
 	/**
 	 * Returns the number of aligned structures in the MultipleAlignment.
 	 * 
@@ -141,15 +169,16 @@ public interface MultipleAlignment extends ScoresCache {
 	 * @see #size()
 	 */
 	public int getCoreLength();
-	
+
 	/**
 	 * Clear scores and other properties which depend on the specific 
 	 * alignment. This frees memory and ensures consistency of the cached 
-	 * variables.<p>
+	 * variables.
+	 * <p>
 	 * Recursively clears member BlockSets.
 	 */
 	public void clear();
-	
+
 	/**
 	 * Return a summary of the MultipleAlignment, containing the structures, 
 	 * the lengths and the cached scores. Can be used as a header for the 
@@ -159,4 +188,5 @@ public interface MultipleAlignment extends ScoresCache {
 	 */
 	@Override
 	public String toString();
+
 }

@@ -1,11 +1,33 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.AtomImpl;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -39,12 +61,13 @@ public class TestAFPChainConversion {
 		}
 		afp.setOptAln(optAln);
 		afp.setBlockNum(optAln.length);
-		//Set the rotation matrix to the identity and the shift to the origin
-		Matrix rot = Matrix.identity(3, 3);
+		//Set the rotation matrix and shift to random numbers
+		double[][] mat = {{0.13,1.5,0.84},{1.3,0.44,2.3},{1.0,1.2,2.03}};
+		Matrix rot = new Matrix(mat);
 		Atom shift = new AtomImpl();
-		shift.setX(0);
-		shift.setY(0);
-		shift.setZ(0);
+		shift.setX(0.44);
+		shift.setY(0.21);
+		shift.setZ(0.89);
 		Matrix[] blockRot = {rot,rot,rot};
 		afp.setBlockRotationMatrix(blockRot);
 		Atom[] blockShift = {shift,shift,shift};
@@ -53,7 +76,7 @@ public class TestAFPChainConversion {
 		//Convert the AFPChain into a MultipleAlignment (without Atoms)
 		MultipleAlignmentEnsemble ensemble = 
 				new MultipleAlignmentEnsembleImpl(afp,null,null,true);
-		MultipleAlignment msa = ensemble.getMultipleAlignments().get(0);
+		MultipleAlignment msa = ensemble.getMultipleAlignment(0);
 
 		//Test for all the information
 		assertEquals(afp.getName1(),ensemble.getStructureNames().get(0));
@@ -63,9 +86,12 @@ public class TestAFPChainConversion {
 		assertTrue(ensemble.getCalculationTime().equals(
 				afp.getCalculationTime()));
 		assertEquals(afp.getBlockNum(), msa.getBlockSets().size());
-		assertEquals(Calc.getTransformation(afp.getBlockRotationMatrix()[0], 
-				afp.getBlockShiftVector()[0]), 
-				msa.getTransformations().get(1));
+		for (int b = 0; b<afp.getBlockNum(); b++){
+			assertEquals(Calc.getTransformation(
+					afp.getBlockRotationMatrix()[b],
+					afp.getBlockShiftVector()[b]),
+					msa.getBlockSet(b).getTransformations().get(1));
+		}
 
 		//Test for the scores
 		assertEquals(msa.getScore(MultipleAlignmentScorer.CE_SCORE),
@@ -81,7 +107,7 @@ public class TestAFPChainConversion {
 			for (int c=0; c<2; c++){
 				for (int res=0; res<5; res++){
 					Integer afpRes = afp.getOptAln()[b][c][res];
-					assertEquals(afpRes, msa.getBlocks().get(b).
+					assertEquals(afpRes, msa.getBlock(b).
 							getAlignRes().get(c).get(res));
 				}
 			}

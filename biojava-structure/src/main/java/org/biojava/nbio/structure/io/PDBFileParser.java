@@ -23,8 +23,9 @@ package org.biojava.nbio.structure.io;
 
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
-import org.biojava.nbio.structure.io.mmcif.ReducedChemCompProvider;
 import org.biojava.nbio.structure.io.util.PDBTemporaryStorageUtils.LinkRecord;
+import org.biojava.nbio.structure.secstruc.SecStrucInfo;
+import org.biojava.nbio.structure.secstruc.SecStrucType;
 import org.biojava.nbio.structure.xtal.CrystalCell;
 import org.biojava.nbio.structure.xtal.SpaceGroup;
 import org.biojava.nbio.structure.xtal.SymoplibParser;
@@ -32,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.vecmath.Matrix4d;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,17 +155,18 @@ public class PDBFileParser  {
 	private Map<String, Site> siteMap = new LinkedHashMap<String, Site>();
 	private Map<String, List<ResidueNumber>> siteToResidueMap = new LinkedHashMap<String, List<ResidueNumber>>();
 	
-	private Matrix4d currentNcsOp = null;
+	private Matrix4d currentNcsOp;
 	private List<Matrix4d> ncsOperators;
 
 	// for storing LINK until we have all the atoms parsed
 	private List<LinkRecord> linkRecords;
 	
 	// for parsing COMPOUND and SOURCE Header lines
-	private int molTypeCounter = 1;
-	//private int continuationNo;
+	private int prevMolId;
+	private String previousContinuationField;
 	private String continuationField;
-	private String continuationString = "";
+	private String continuationString;
+	
 	private DateFormat dateFormat;
 	
 	// for rfree parsing
@@ -203,34 +206,7 @@ public class PDBFileParser  {
 					"EXPRESSION_SYSTEM_VECTOR:", "EXPRESSION_SYSTEM_PLASMID:",
 					"EXPRESSION_SYSTEM_GENE:", "OTHER_DETAILS:"));
 
-
-
-
-	private String previousContinuationField = "";
-
-	/** Secondary strucuture assigned by the PDB author/
-	 *
-	 */
-	public static final String PDB_AUTHOR_ASSIGNMENT = "PDB_AUTHOR_ASSIGNMENT";
-
-	/** Helix secondary structure assignment.
-	 *
-	 */
-	public static final String HELIX  = "HELIX";
-
-	/** Strand secondary structure assignment.
-	 *
-	 */
-	public static final String STRAND = "STRAND";
-
-	/** Turn secondary structure assignment.
-	 *
-	 */
-	public static final String TURN   = "TURN";
-
-	int atomCount;
-
-
+	private int atomCount;
 
 	private int my_ATOM_CA_THRESHOLD ;
 
@@ -239,7 +215,7 @@ public class PDBFileParser  {
 	private boolean atomOverflow;
 
 	/** flag to tell parser to only read Calpha coordinates **/
-	boolean parseCAonly;
+	private boolean parseCAonly;
 
 	static {
 
@@ -264,7 +240,7 @@ public class PDBFileParser  {
 		helixList     = new ArrayList<Map<String,String>>();
 		strandList    = new ArrayList<Map<String,String>>();
 		turnList      = new ArrayList<Map<String,String>>();
-		current_compound = new Compound();
+		current_compound = null;
 		dbrefs        = new ArrayList<DBRef>();
 		siteMap = null;
 		dateFormat = new SimpleDateFormat("dd-MMM-yy", Locale.US);
@@ -739,23 +715,7 @@ public class PDBFileParser  {
 	 */
 	private void pdb_SEQRES_Handler(String line) {
 			
-		//		System.out.println("PDBFileParser.pdb_SEQRES_Handler: BEGIN");
-		//		System.out.println(line);
-
-		//TODO: treat the following residues as amino acids?
 		/*
-        MSE Selenomethionine
-        CSE Selenocysteine
-        PTR Phosphotyrosine
-        SEP Phosphoserine
-        TPO Phosphothreonine
-        HYP 4-hydroxyproline
-        5HP Pyroglutamic acid; 5-hydroxyproline
-        PCA Pyroglutamic Acid
-        LYZ 5-hydroxylysine
-        GLX Glu or Gln
-        ASX Asp or Asn
-        GLA gamma-carboxy-glutamic acid
                  1         2         3         4         5         6         7
         1234567890123456789012345678901234567890123456789012345678901234567890
         SEQRES   1 A  376  LYS PRO VAL THR VAL LYS LEU VAL ASP SER GLN ALA THR
@@ -916,10 +876,6 @@ public class PDBFileParser  {
 	 */
 	private void pdb_COMPND_Handler(String line) {
 
-		String continuationNr = line.substring(9, 10).trim();
-		
-		logger.debug("current continuationNo     is "
-					+ continuationNr);
 		logger.debug("previousContinuationField  is "
 					+ previousContinuationField);
 		logger.debug("current continuationField  is "
@@ -941,41 +897,29 @@ public class PDBFileParser  {
 			line = line.substring(0, 72);
 		}
 
-		//String beginningOfLine = line.substring(0, 10);
-		//line = line.replace(beginningOfLine, "");
 		line = line.substring(10, line.length());
 
-		
-		logger.debug("LINE: >" + line + "<");
-		
-		String[] fieldList = line.split("\\s+");
+				
+		String[] fieldList = line.trim().split("\\s+");
 		int fl = fieldList.length;
-		if ((fl >0 ) && (!fieldList[0].equals(""))
-				&& compndFieldValues.contains(fieldList[0])) {
-			//			System.out.println("[PDBFileParser.pdb_COMPND_Handler] Setting continuationField to '" + fieldList[0] + "'");
+		if ((fl >0 ) && compndFieldValues.contains(fieldList[0])) {
+
 			continuationField = fieldList[0];
 			if (previousContinuationField.equals("")) {
 				previousContinuationField = continuationField;
 			}
-
-		} else if ((fl >1 ) && compndFieldValues.contains(fieldList[1])) {
-			//			System.out.println("[PDBFileParser.pdb_COMPND_Handler] Setting continuationField to '" + fieldList[1] + "'");
-			continuationField = fieldList[1];
-			if (previousContinuationField.equals("")) {
-				previousContinuationField = continuationField;
+			
+		} else if (fl>0) {
+			// the ':' character indicates the end of a field name and should be invalid as part the first data token
+			// e.g. obsolete file 1hhb has a malformed COMPND line that can only be caught with this kind of check
+			if (fieldList[0].contains(":") ) {  
+				logger.info("COMPND line does not follow the PDB 3.0 format. Note that COMPND parsing is not supported any longer in format 2.3 or earlier");
+				return;
 			}
 
 		} else {
-			if (continuationNr.equals("")) {
-				
-				logger.debug("looks like an old PDB file");
-				
-				continuationField = "MOLECULE:";
-				if (previousContinuationField.equals("")) {
-					previousContinuationField = continuationField;
-				}
-			}
-
+			
+			// the line will be added as data to the previous field 
 		}
 
 		line = line.replace(continuationField, "").trim();
@@ -1025,12 +969,12 @@ public class PDBFileParser  {
 			//			System.out.println("[pdb_COMPND_Handler] Final COMPND line - Finishing off final MolID header.");
 			compndValueSetter(continuationField, continuationString);
 			continuationString = "";
-			compounds.add(current_compound);
+			if (current_compound!=null) compounds.add(current_compound);
 		}
 	}
 
-	/** set the value in the currrent molId object
-	 *
+	/** 
+	 * Set the value in the currrent molId object
 	 * @param field
 	 * @param value
 	 */
@@ -1038,28 +982,33 @@ public class PDBFileParser  {
 
 		value = value.trim().replace(";", "");
 		if (field.equals("MOL_ID:")) {
-
-			//TODO: find out why an extra mol or chain gets added  and why 1H1J, 1J1H ATOM records are missing, but not 1H1H....
-			
-			logger.debug("molTypeCounter " + molTypeCounter + " "
-						+ value);
+						
 			int i = -1;
 			try {
 				i = Integer.valueOf(value);
 			} catch (NumberFormatException e){
-				logger.warn(e.getMessage() + " while trying to parse COMPND MOL_ID line.");
+				logger.warn("Value '{}' does not look like a number, while trying to parse COMPND MOL_ID line.",value);
 			}
-			if (molTypeCounter != i) {
-				molTypeCounter++;
+			if (i>0 && prevMolId!=i) {
+				
+				if (current_compound!=null) compounds.add(current_compound);
 
-				compounds.add(current_compound);
-				current_compound = null;
+				logger.debug("Initialising new Compound with mol_id {}", i);
+				
 				current_compound = new Compound();
-
+				
+				current_compound.setMolId(i);
+				
+				prevMolId = i;
 			}
 
-			current_compound.setMolId(i);
 		}
+		
+		// if for some reason (e.g. missing mol_id line) the current_compound is null we can't add anything to it, return
+		if (current_compound==null) {
+			return;
+		}
+		
 		if (field.equals("MOLECULE:")) {
 			current_compound.setMolName(value);
 
@@ -2325,7 +2274,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 		if (icode2.equals(" "))
 			icode2 = "";
 
-		SSBond ssbond = new SSBond();
+		SSBond ssbond = new SSBondImpl();
 
 		ssbond.setChainID1(chain1);
 		ssbond.setResnum1(seqNum1);
@@ -2665,14 +2614,15 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 		current_group = null           ;
 		pdbHeader     = new PDBHeader();
 		connects      = new ArrayList<Map<String,Integer>>();
+		previousContinuationField = "";
 		continuationField = "";
 		continuationString = "";
-		current_compound = new Compound();
+		current_compound = null;
 		sourceLines.clear();
 		compndLines.clear();
 		isLastCompndLine = false;
 		isLastSourceLine = false;
-		molTypeCounter = 1;
+		prevMolId = -1;
 		compounds.clear();
 		helixList.clear();
 		strandList.clear();
@@ -2854,7 +2804,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 
 			// TODO determine what the actual bond order of this bond is; for
 			// now, we're assuming they're single bonds
-			new Bond(a, b, 1);
+			new BondImpl(a, b, 1);
 		} catch (StructureException e) {
 			// Note, in Calpha only mode the link atoms may not be present.
 			if (! parseCAonly) {
@@ -2877,7 +2827,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 					disulfideBond.getChainID2(), disulfideBond.getResnum2(),
 					disulfideBond.getInsCode2());
 			
-			new Bond(a, b, 1);
+			new BondImpl(a, b, 1);
 		} catch (StructureException e) {
 			// Note, in Calpha only mode the CYS SG's are not present.
 			if (! parseCAonly) {
@@ -2950,7 +2900,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 				logger.warn("Chain {} ({} atom groups) is composed of water molecules only. Removing it.", 
 						c.getChainID(), c.getAtomGroups().size());
 				it.remove();
-			}
+			} 
 		}
 		structure.addModel(current_model);
 		structure.setPDBHeader(pdbHeader);
@@ -3021,7 +2971,12 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 				Chain atomRes;
 			
 				atomRes = SeqRes2AtomAligner.getMatchingAtomRes(seqRes,atomList);
-				atomRes.setSeqResGroups(seqRes.getAtomGroups());
+
+				if ( atomRes != null)
+					atomRes.setSeqResGroups(seqRes.getAtomGroups());
+				else
+					logger.warn("Could not find atom records for chain " + seqRes.getChainID());
+
 				
 			}
 		}
@@ -3029,13 +2984,30 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 
 	private void setSecStruc(){
 
-		setSecElement(helixList,  PDB_AUTHOR_ASSIGNMENT, HELIX  );
-		setSecElement(strandList, PDB_AUTHOR_ASSIGNMENT, STRAND );
-		setSecElement(turnList,   PDB_AUTHOR_ASSIGNMENT, TURN   );
-
+		setSecElement(helixList, SecStrucInfo.PDB_AUTHOR_ASSIGNMENT, 
+				SecStrucType.helix4);
+		setSecElement(strandList, SecStrucInfo.PDB_AUTHOR_ASSIGNMENT, 
+				SecStrucType.extended);
+		setSecElement(turnList, SecStrucInfo.PDB_AUTHOR_ASSIGNMENT, 
+				SecStrucType.turn);
+		
+		//Now insert random coil to the Groups that did not have SS information
+		GroupIterator gi = new GroupIterator(structure);
+		while (gi.hasNext()){
+			Group g = gi.next();
+			if (g.hasAminoAtoms()){
+				if (g.getProperty(Group.SEC_STRUC) == null){
+					SecStrucInfo ss = new SecStrucInfo(g, 
+							SecStrucInfo.PDB_AUTHOR_ASSIGNMENT, 
+							SecStrucType.coil);
+					g.setProperty(Group.SEC_STRUC, ss);
+				}
+			}
+		}
+		
 	}
 
-	private void setSecElement(List<Map<String,String>> secList, String assignment, String type){
+	private void setSecElement(List<Map<String,String>> secList, String assignment, SecStrucType type){
 
 
 		Iterator<Map<String,String>> iter = secList.iterator();
@@ -3058,8 +3030,6 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 				if (endICode.equals(" "))
 					endICode = "";
 
-
-
 				GroupIterator gi = new GroupIterator(structure);
 				boolean inRange = false;
 				while (gi.hasNext()){
@@ -3074,12 +3044,9 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 						}
 					}
 					if ( inRange){
-						if ( g instanceof AminoAcid) {
-							AminoAcid aa = (AminoAcid)g;
-
-							Map<String,String> assignmentMap = new HashMap<String,String>();
-							assignmentMap.put(assignment,type);
-							aa.setSecStruc(assignmentMap);
+						if (g.hasAminoAtoms()) {
+							SecStrucInfo ss = new SecStrucInfo(g, assignment, type);
+							g.setProperty(Group.SEC_STRUC, ss);
 						}
 
 					}
@@ -3090,9 +3057,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 							continue nextElement;
 						}
 					}
-
 				}
-
 			}
 	}
 
@@ -3121,7 +3086,10 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 				} catch (StructureException e){
 					// usually if this happens something is wrong with the PDB header
 					// e.g. 2brd - there is no Chain A, although it is specified in the header
-					logger.error("Unexpected exception",e);
+					// Some bona-fide cases exist, e.g. 2ja5, chain N is described in SEQRES
+					// but the authors didn't observe in the density so it's completely missing
+					// from the ATOM lines
+					logger.warn("Could not find chain {} to link to compound (entity) {}. The chain will be missing in the compound.", chainId, comp.getMolId());
 				}
 			}
 			comp.setChains(chains);
@@ -3152,7 +3120,7 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 					Chain c = s.getChainByPDB(chainId);
 					c.setCompound(comp);
 				} catch (StructureException e){
-					logger.error("Unexpected exception",e);
+					logger.warn("Chain {} was not found, can't assign a compound (entity) to it.",chainId);
 				}
 			}
 		}
@@ -3571,10 +3539,6 @@ COLUMNS   DATA TYPE         FIELD          DEFINITION
 		// set the correct max values for parsing...
 		load_max_atoms = params.getMaxAtoms();
 		my_ATOM_CA_THRESHOLD = params.getAtomCaThreshold();
-
-		if ( !params.isLoadChemCompInfo()) {
-			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());
-		}
 
 	}
 

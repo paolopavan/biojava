@@ -1,7 +1,28 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple.mc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 
@@ -19,7 +40,9 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 	private int minAlignedStructures;
 	private double gapOpen;
 	private double gapExtension;
+	private double distanceCutoff;
 	private int convergenceSteps;
+	private int nrThreads;
 	
 	/**
 	 * Constructor with DEFAULT values of the parameters.
@@ -37,8 +60,9 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 		params.add("MinAlignedStructures");
 		params.add("GapOpen");
 		params.add("GapExtension");
+		params.add("DistanceCutoff");
 		params.add("ConvergenceSteps");
-
+		params.add("NrThreads");
 		return params;
 	}
 
@@ -51,8 +75,9 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 		params.add("Minimum Structures per Column");
 		params.add("Gap Opening Penalty");
 		params.add("Gap Extension Penalty");
+		params.add("Distance Cutoff");
 		params.add("Steps to Convergence");
-		
+		params.add("Number of Threads");
 		return params;
 	}
 
@@ -66,8 +91,9 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 		params.add(Integer.class);
 		params.add(Double.class);
 		params.add(Double.class);
+		params.add(Double.class);
 		params.add(Integer.class);
-		
+		params.add(Integer.class);
 		return params;
 	}
 
@@ -87,19 +113,25 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 		String gapOpen = "Penalty for opening a gap in any of the structures.";
 		String gapExtension = "Penalty for extending a gapped region in any of"
 				+ " the structures.";
+		String dCutoff = "Distance Cutoff: the maximum allowed distance (in A) "
+				+ "between two aligned residues.";
 		String convergenceSteps = 
 				"Number of steps without a change in the alignment before "
 				+ "stopping. Proportional to the calculation time. "
 				+"If it is 0 the convergence steps are calculated proportional"
 				+ " to the number of structures and their length.";
+		String nrThreads =
+				"Number of threads to be used for the seed calculation (all-"
+				+ "to-all pairwise alignments) and the MC optimization.";
 		
 		params.add(randomSeed);
 		params.add(minBlockLen);
 		params.add(minAlignedStructures);
 		params.add(gapOpen);
 		params.add(gapExtension);
+		params.add(dCutoff);
 		params.add(convergenceSteps);
-		
+		params.add(nrThreads);
 		return params;
 	}
 
@@ -108,19 +140,22 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 		return "MultipleMcParameters [randomSeed=" + randomSeed
 				+ ", minBlockLen=" + minBlockLen + ", minAlignedStructures="
 				+ minAlignedStructures + ", gapOpen=" + gapOpen
-				+ ", gapExtension=" + gapExtension + ", convergenceSteps="
-				+ convergenceSteps + "]";
+				+ ", gapExtension=" + gapExtension + ", distanceCutoff="
+				+ distanceCutoff + ", convergenceSteps=" + convergenceSteps
+				+ ", nrThreads=" + nrThreads + "]";
 	}
 
 	@Override
 	public void reset() {
 		
-		randomSeed = 0;
-		minBlockLen = 15;
+		randomSeed = new Random().nextInt(10000);
+		minBlockLen = 10;
 		minAlignedStructures = 0;
-		gapOpen = 10.0;
-		gapExtension = 5.0;
+		gapOpen = 20.0;
+		gapExtension = 15.0;
+		distanceCutoff = 7.0;
 		convergenceSteps = 0;
+		nrThreads = Runtime.getRuntime().availableProcessors();
 	}
 
 	public int getRandomSeed() {
@@ -169,5 +204,21 @@ public class MultipleMcParameters implements ConfigStrucAligParams {
 
 	public void setConvergenceSteps(Integer convergenceSteps) {
 		this.convergenceSteps = convergenceSteps;
+	}
+
+	public int getNrThreads() {
+		return nrThreads;
+	}
+
+	public void setNrThreads(Integer nrThreads) {
+		this.nrThreads = nrThreads;
+	}
+
+	public double getDistanceCutoff() {
+		return distanceCutoff;
+	}
+
+	public void setDistanceCutoff(Double distanceCutoff) {
+		this.distanceCutoff = distanceCutoff;
 	}	
 }

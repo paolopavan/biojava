@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.gui.jmol;
 
 import java.awt.Color;
@@ -32,10 +52,12 @@ import org.biojava.nbio.structure.align.gui.MultipleAlignmentGUI;
 import org.biojava.nbio.structure.align.multiple.Block;
 import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.jcolorbrewer.ColorBrewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** 
  * A class that provides a 3D visualization Frame in Jmol for
@@ -54,6 +76,9 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 
 	private static final String LIGAND_DISPLAY_SCRIPT = 
 			"select ligand; wireframe 40; spacefill 120; color CPK;";
+	
+	private static final Logger logger = 
+			LoggerFactory.getLogger(MultipleAlignmentJmol.class);
 
 	/**
 	 * Default constructor creates an empty JmolPanel window, 
@@ -128,41 +153,43 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 		vBox.add(field);
 
 		/// STRUCTURE SELECTION
-		Box hBox0 = Box.createHorizontalBox();
-		hBox0.setMaximumSize(new Dimension(Short.MAX_VALUE,30));
+		if (multAln != null) {
+			Box hBox0 = Box.createHorizontalBox();
+			hBox0.setMaximumSize(new Dimension(Short.MAX_VALUE,30));
 
-		JButton show = new JButton("Show Only: ");
-		show.addActionListener(new ActionListener() {
+			JButton show = new JButton("Show Only: ");
+			show.addActionListener(new ActionListener() {
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				jmolPanel.evalString("save selection;");
-				String cmd = getJmolString(multAln, transformedAtoms, 
-						colorPalette, colorByBlocks.isSelected());
-				cmd += "; restrict ";
-				for (int st=0; st<multAln.size(); st++){
-					if (selectedStructures.get(st).isSelected()){
-						cmd += "*/"+(st+1)+", ";
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					jmolPanel.evalString("save selection;");
+					String cmd = getJmolString(multAln, transformedAtoms, 
+							colorPalette, colorByBlocks.isSelected());
+					cmd += "; restrict ";
+					for (int st=0; st<multAln.size(); st++){
+						if (selectedStructures.get(st).isSelected()){
+							cmd += "*/"+(st+1)+", ";
+						}
 					}
+					cmd += "none;";
+					jmolPanel.executeCmd(cmd+" restore selection;");
 				}
-				cmd += "none;";
-				jmolPanel.executeCmd(cmd+" restore selection;");
-			}
-		});
+			});
 
-		hBox0.add(show);
-		hBox0.add(Box.createGlue());
-
-		for (int str=0; str<multAln.size(); str++){
-			JCheckBox structureSelection = new JCheckBox(
-					multAln.getEnsemble().getStructureNames().get(str));
-			hBox0.add(structureSelection);
+			hBox0.add(show);
 			hBox0.add(Box.createGlue());
-			structureSelection.setSelected(true);
-			selectedStructures.add(structureSelection);
-		}
 
-		vBox.add(hBox0);	
+			for (int str=0; str<multAln.size(); str++){
+				JCheckBox structureSelection = new JCheckBox(
+						multAln.getEnsemble().getStructureNames().get(str));
+				hBox0.add(structureSelection);
+				hBox0.add(Box.createGlue());
+				structureSelection.setSelected(true);
+				selectedStructures.add(structureSelection);
+			}
+
+			vBox.add(hBox0);
+		}
 
 		/// COMBO BOXES 
 		Box hBox1 = Box.createHorizontalBox();
@@ -233,7 +260,7 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("reset!!");
+				logger.info("reset!!");
 				jmolPanel.executeCmd("restore STATE state_1");
 
 			}
@@ -313,13 +340,10 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 				if ( structure != null)
 					setStructure(structure);
 				else  {
-					System.err.println("could not find anything to display!");
+					logger.error("Could not find anything to display!");
 					return;
 				}
 			}
-			Structure artificial = MultipleAlignmentDisplay.
-					getAlignedStructure(transformedAtoms);
-
 			PDBHeader header = new PDBHeader();
 			String title =  multAln.getEnsemble().getAlgorithmName() + 
 					" V." +multAln.getEnsemble().getVersion() + " : ";
@@ -327,11 +351,13 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 			for (String name:multAln.getEnsemble().getStructureNames()){
 				title +=  name + " ";
 			}
+			Structure artificial = MultipleAlignmentDisplay.
+					getAlignedStructure(transformedAtoms);
 
-			System.out.println(title);
-			header.setTitle(title);
 			artificial.setPDBHeader(header);
 			setStructure(artificial);
+			header.setTitle(title);
+			logger.info(title);
 
 		} catch (StructureException e){
 			e.printStackTrace();
@@ -350,15 +376,14 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 		String cmd = e.getActionCommand();
 		if ( cmd.equals(MenuCreator.TEXT_ONLY)) {
 			if ( multAln == null) {
-				System.err.println("Currently not viewing an alignment!");
+				logger.error("Currently not viewing an alignment!");
 				return;
 			}
-			System.out.println(
-					"Option currently not available for Multiple Alignments");
+			logger.warn("Option not available for MultipleAlignments");
 
 		} else if ( cmd.equals(MenuCreator.PAIRS_ONLY)) {
 			if ( multAln == null) {
-				System.err.println("Currently not viewing an alignment!");
+				logger.error("Currently not viewing an alignment!");
 				return;
 			}
 			String result = MultipleAlignmentWriter.toAlignedResidues(multAln);
@@ -366,7 +391,7 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 
 		} else if (cmd.equals(MenuCreator.ALIGNMENT_PANEL)){
 			if ( multAln == null) {
-				System.err.println("Currently not viewing an alignment!");
+				logger.error("Currently not viewing an alignment!");
 				return;
 			}
 			try {
@@ -378,7 +403,7 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 
 		} else if (cmd.equals(MenuCreator.FATCAT_TEXT)){
 			if ( multAln == null) {
-				System.err.println("Currently not viewing an alignment!");
+				logger.error("Currently not viewing an alignment!");
 				return;
 			}
 			String result = MultipleAlignmentWriter.toFatCat(multAln)+"\n";
@@ -511,10 +536,10 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 
 	public void resetDisplay() {
 
-		if (multAln != null) {
+		if (multAln != null && transformedAtoms != null) {
 			String script = getJmolString(multAln, transformedAtoms, 
 					colorPalette, colorByBlocks.isSelected());
-			//System.out.println(script);
+			logger.debug(script);
 			evalString(script);
 			jmolPanel.evalString("save STATE state_1");
 		}
@@ -529,6 +554,14 @@ public class MultipleAlignmentJmol extends AbstractAlignmentJmol {
 	public void setColorByBlocks(boolean colorByBlocks){
 		this.colorByBlocks.setSelected(colorByBlocks);
 		resetDisplay();
+	}
+
+	public JFrame getFrame(){
+		return frame;
+	}
+
+	public MultipleAlignment getMultipleAlignment(){
+		return multAln;
 	}
 
 }

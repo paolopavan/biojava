@@ -58,7 +58,7 @@ import org.biojava.nbio.structure.gui.util.SelectMultiplePanel;
  * the multiple alignment algorithm.
  *
  * @author Aleix Lafita
- * @since 4.1.1
+ * @since 4.2.0
  * 
  */
 public class MultipleAlignmentGUI extends JFrame {
@@ -69,7 +69,7 @@ public class MultipleAlignmentGUI extends JFrame {
 	private MultipleStructureAligner multiple;
 	private StructureAlignment pairwise;
 	
-	private SelectMultiplePanel  tab;
+	private SelectMultiplePanel tab;
 	private JTabbedPane tabPane;
 
 	private Thread thread;
@@ -199,8 +199,6 @@ public class MultipleAlignmentGUI extends JFrame {
 			public static final long serialVersionUID = 0l;
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				JComboBox cb = (JComboBox)evt.getSource();
-				String algorithmName = (String) cb.getSelectedItem();
 				updateMultipleAlgorithm();
 			}
 		};

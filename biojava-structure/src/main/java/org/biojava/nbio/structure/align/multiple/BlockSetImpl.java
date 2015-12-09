@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple;
 
 import java.io.Serializable;
@@ -15,19 +35,19 @@ import javax.vecmath.Matrix4d;
  * 
  */
 public class BlockSetImpl extends AbstractScoresCache 
-						  implements Serializable, BlockSet, Cloneable {
+implements Serializable, BlockSet, Cloneable {
 
 	private static final long serialVersionUID = -1015791986000076089L;
-	
+
 	//Member variables
 	private MultipleAlignment parent;
 	private List<Block> blocks;
-	
+
 	//Cache variables (can be updated)
 	private List<Matrix4d> pose; //Transformation matrices
 	private int length;
 	private int coreLength;
-	
+
 	/**
 	 * Constructor. Links also the parent to this instance by adding the
 	 * BlockSet to the parent's List.
@@ -36,16 +56,16 @@ public class BlockSetImpl extends AbstractScoresCache
 	 * @return BlockSet an instance linked to the parent alignment.
 	 */
 	public BlockSetImpl(MultipleAlignment alignment) {
-		
+
 		parent = alignment;
 		if (parent!=null) parent.getBlockSets().add(this);
 		blocks = null;
-		
+
 		pose = null;
 		length = -1; //Value -1 reserved to indicate that has to be calculated
 		coreLength = -1;
 	}
-	
+
 	/**
 	 * Copy constructor. Makes also a deep copy of all constituent 
 	 * {@link Block}s.
@@ -54,12 +74,12 @@ public class BlockSetImpl extends AbstractScoresCache
 	 * @return BlockSet an identical copy of the input object.
 	 */
 	public BlockSetImpl(BlockSetImpl bs){
-		
+
 		super(bs); //This copies the cached scores
 		this.parent = bs.parent;
 		this.length = bs.length;
 		this.coreLength = bs.coreLength;
-		
+
 		this.pose = null;
 		if (bs.pose != null){
 			//Make a deep copy of everything
@@ -69,7 +89,7 @@ public class BlockSetImpl extends AbstractScoresCache
 				pose.add(newTrans);
 			}
 		}
-		
+
 		blocks = null;
 		if (bs.blocks!=null){
 			//Make a deep copy of everything
@@ -81,7 +101,7 @@ public class BlockSetImpl extends AbstractScoresCache
 			}
 		}
 	}
-	
+
 	@Override
 	public void clear() {
 		super.clear();
@@ -92,12 +112,12 @@ public class BlockSetImpl extends AbstractScoresCache
 			a.clear();
 		}
 	}
-	
+
 	@Override
 	public BlockSetImpl clone(){
 		return new BlockSetImpl(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "BlockSetImpl [blocks=" + blocks
@@ -128,12 +148,12 @@ public class BlockSetImpl extends AbstractScoresCache
 			b.setBlockSet(this);
 		}
 	}
-	
+
 	@Override
 	public List<Matrix4d> getTransformations() {
 		return pose;
 	}
-	
+
 	@Override
 	public void setTransformations(List<Matrix4d> transformations) {
 		if(size() != transformations.size()) {

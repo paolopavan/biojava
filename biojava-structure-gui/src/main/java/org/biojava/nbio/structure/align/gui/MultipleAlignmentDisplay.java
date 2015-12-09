@@ -1,3 +1,23 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.gui;
 
 import java.awt.Dimension;
@@ -26,8 +46,8 @@ import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.multiple.Block;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleSuperimposer;
-import org.biojava.nbio.structure.align.multiple.ReferenceSuperimposer;
+import org.biojava.nbio.structure.align.multiple.util.MultipleSuperimposer;
+import org.biojava.nbio.structure.align.multiple.util.ReferenceSuperimposer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +61,7 @@ import org.slf4j.LoggerFactory;
  * an artificial PDB structure with a new model for every aligned structure.
  * 
  * @author Aleix Lafita
+ * @since 4.2.0
  *
  */
 public class MultipleAlignmentDisplay {
@@ -173,7 +194,7 @@ public class MultipleAlignmentDisplay {
 
 		int size = multAln.size();
 
-		List<Atom[]> atomArrays = multAln.getEnsemble().getAtomArrays();
+		List<Atom[]> atomArrays = multAln.getAtomArrays();
 		for (int i=0; i<size; i++){
 			if (atomArrays.get(i).length < 1) 
 				throw new StructureException(
@@ -183,13 +204,10 @@ public class MultipleAlignmentDisplay {
 
 		List<Atom[]> rotatedAtoms = new ArrayList<Atom[]>();
 
-		List<Matrix4d> transforms = multAln.getTransformations();
 		//TODO implement independent BlockSet superposition of the structure
-		if (multAln.getBlockSets().size() > 1) {
-			transforms = multAln.getBlockSets().get(0).getTransformations();
-		}
+		List<Matrix4d> transf = multAln.getBlockSet(0).getTransformations();
 
-		if(transforms == null) {
+		if(transf == null) {
 
 			logger.error("Alignment Transformations are not calculated. "
 					+ "Superimposing to first structure as reference.");
@@ -197,12 +215,8 @@ public class MultipleAlignmentDisplay {
 			multAln = multAln.clone();
 			MultipleSuperimposer imposer = new ReferenceSuperimposer();
 			imposer.superimpose(multAln);
-			transforms = multAln.getTransformations();
-
-			if (multAln.getBlockSets().size() > 1) {
-				transforms = multAln.getBlockSets().get(0).getTransformations();
-			}
-			assert(transforms != null);
+			transf = multAln.getBlockSet(0).getTransformations();
+			assert(transf != null);
 		}
 
 		//Rotate the atom coordinates of all the structures
@@ -223,7 +237,7 @@ public class MultipleAlignmentDisplay {
 			}
 
 			//Transform the structure to ensure a full rotation in the display
-			Calc.transform(displayS, transforms.get(i));
+			Calc.transform(displayS, transf.get(i));
 			rotatedAtoms.add(rotCA);
 		}
 

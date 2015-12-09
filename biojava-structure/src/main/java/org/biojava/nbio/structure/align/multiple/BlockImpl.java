@@ -1,26 +1,48 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ */
 package org.biojava.nbio.structure.align.multiple;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentTools;
+
 /**
  * General implementation of a {@link Block} that supports any type of
- * alignment with gaps.
+ * sequential alignment with gaps.
  * 
  * @author Aleix Lafita
  * @since 4.1.0
  * 
  */
 public class BlockImpl extends AbstractScoresCache 
-					   implements Serializable, Block, Cloneable {
+implements Serializable, Block, Cloneable {
 
 	private static final long serialVersionUID = -5804042669466177641L;
-	
+
 	private BlockSet parent;
 	private List<List<Integer>> alignRes;
 	private int coreLength;
-	
+
 	/**
 	 * Constructor. Links also the parent to this instance, by adding the
 	 * Block to the parent's list.
@@ -29,13 +51,13 @@ public class BlockImpl extends AbstractScoresCache
 	 * @return BlockImpl a BlockImpl instance linked to its parent BlockSet.
 	 */
 	public BlockImpl(BlockSet blockSet) {
-		
+
 		parent = blockSet;
 		if (parent!=null) parent.getBlocks().add(this);
 		alignRes = null;
 		coreLength = -1; //Value -1 indicates not yet calculated.
 	}
-	
+
 	/**
 	 * Copy constructor.
 	 * 
@@ -43,11 +65,11 @@ public class BlockImpl extends AbstractScoresCache
 	 * @return BlockImpl an identical copy of the input BlockImpl object.
 	 */
 	public BlockImpl(BlockImpl b) {
-		
+
 		super(b); //This copies the cached scores
 		this.parent = b.parent;
 		this.coreLength = b.coreLength;
-		
+
 		this.alignRes = null;
 		if (b.alignRes!=null){
 			//Make a deep copy of everything
@@ -57,18 +79,18 @@ public class BlockImpl extends AbstractScoresCache
 			}
 		}
 	}
-	
+
 	@Override
 	public Block clone(){
 		return new BlockImpl(this);
 	}
-	
+
 	@Override
 	public void clear() {
 		super.clear();
 		coreLength = -1;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "BlockImpl [alignRes=" + alignRes
@@ -114,17 +136,6 @@ public class BlockImpl extends AbstractScoresCache
 	}
 
 	protected void updateCoreLength() {
-		coreLength = 0;
-		//Count how many positions do not have gaps in any structure
-		for (int col=0; col<length(); col++){
-			boolean core = true;
-			for (int str=0; str<size(); str++){
-				if (alignRes.get(str).get(col) == null){
-					core = false;
-					break;
-				}
-			}
-			if (core) coreLength++;
-		}
+		coreLength = MultipleAlignmentTools.getCorePositions(this).size();
 	}
 }

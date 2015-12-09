@@ -44,8 +44,8 @@ import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentTools;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentTools;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.gui.events.AlignmentPositionListener;
 import org.biojava.nbio.structure.gui.util.AlignedPosition;
@@ -136,7 +136,7 @@ implements AlignmentPositionListener, WindowListener {
 		//Convert the apfChain into a MultipleAlignment object
 		MultipleAlignmentEnsembleImpl ensemble = 
 				new MultipleAlignmentEnsembleImpl(afpChain, ca1, ca2, flex);
-		this.multAln = ensemble.getMultipleAlignments().get(0);
+		this.multAln = ensemble.getMultipleAlignment(0);
 
 		//Create the sequence alignment and the structure-sequence mapping.
 		this.mapSeqToStruct = new ArrayList<Integer>();
@@ -486,7 +486,7 @@ implements AlignmentPositionListener, WindowListener {
 	}
 
 	public List<Atom[]> getAtomArrays() {
-		return multAln.getEnsemble().getAtomArrays();
+		return multAln.getAtomArrays();
 	}
 	public MultipleAlignment getMultipleAlignment(){
 		return multAln;

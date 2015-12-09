@@ -75,6 +75,9 @@ public class TestDifficultMmCIFFiles {
 		assertFalse(sCif.isCrystallographic());
 
 		assertTrue(sCif.isNmr());
+		
+		assertTrue(sCif.getPDBHeader().getRevisionRecords().size() > 1);
+
 	
 	}
 	
