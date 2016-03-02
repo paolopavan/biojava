@@ -20,6 +20,8 @@
  */
 package org.biojava.nbio.core.search.io.blast;
 
+import org.biojava.nbio.core.search.io.Hsp;
+import org.biojava.nbio.core.sequence.ProteinSequence;
 import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.Sequence;
 
@@ -52,7 +54,7 @@ public class BlastHspBuilder<S extends Sequence<C>, C extends Compound> {
     private String hspIdentityString;
     private Double percentageIdentity;
     private Integer mismatchCount;
-    private Class sequenceClass;
+    private Class<S> sequenceClass;
 
     public BlastHspBuilder() {
     }
@@ -152,13 +154,16 @@ public class BlastHspBuilder<S extends Sequence<C>, C extends Compound> {
         return this;
     }
 
-    public BlastHspBuilder setSequenceClass(Class sequenceClass) {
+    public BlastHspBuilder setSequenceClass(Class<S> sequenceClass) {
         this.sequenceClass = sequenceClass;
         return this;
     }
     
-    public BlastHsp createBlastHsp() {
-        return new BlastHsp(hspNum, hspBitScore, hspScore, hspEvalue, hspQueryFrom, hspQueryTo, hspHitFrom, hspHitTo, hspQueryFrame, hspHitFrame, hspIdentity, hspPositive, hspGaps, hspAlignLen, hspQseq, hspHseq, hspIdentityString, percentageIdentity, mismatchCount, sequenceClass);
+    public Hsp<S,C> createBlastHsp() {
+        if (sequenceClass == ProteinSequence.class)
+            return new BlastProteinHsp(hspNum, hspBitScore, hspScore, hspEvalue, hspQueryFrom, hspQueryTo, hspHitFrom, hspHitTo, hspQueryFrame, hspHitFrame, hspIdentity, hspPositive, hspGaps, hspAlignLen, hspQseq, hspHseq, hspIdentityString, percentageIdentity, mismatchCount, sequenceClass);
+        else 
+            return new BlastNucleotideHsp(hspNum, hspBitScore, hspScore, hspEvalue, hspQueryFrom, hspQueryTo, hspHitFrom, hspHitTo, hspQueryFrame, hspHitFrame, hspIdentity, hspPositive, hspGaps, hspAlignLen, hspQseq, hspHseq, hspIdentityString, percentageIdentity, mismatchCount, sequenceClass);
     }
     
 }

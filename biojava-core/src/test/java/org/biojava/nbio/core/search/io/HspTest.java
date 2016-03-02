@@ -20,13 +20,11 @@
  */
 package org.biojava.nbio.core.search.io;
 
-import org.biojava.nbio.core.alignment.SimpleSequencePair;
 import org.biojava.nbio.core.alignment.template.SequencePair;
 import org.biojava.nbio.core.search.io.blast.BlastHspBuilder;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.ProteinSequence;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompoundSet;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -279,6 +277,27 @@ public class HspTest {
         SequencePair<DNASequence,NucleotideCompound> aln3 = o2.getAlignment();
         String result3 = aln3.toString();
         assertEquals(expResult, result3);
+        
+        // this test represent an incorrect situation but does not fail
+        Hsp<ProteinSequence,AminoAcidCompound> o4 = new BlastHspBuilder<ProteinSequence,AminoAcidCompound>()
+                .setHspNum(1)
+                .setHspBitScore(377.211)
+                .setHspEvalue(8.04143e-093)
+                .setHspQueryFrom(1)
+                .setHspQueryTo(224)
+                .setHspHitFrom(1035)
+                .setHspHitTo(811)
+                .setHspQueryFrame(-1)
+                .setHspIdentity(213)
+                .setHspPositive(213)
+                .setHspGaps(5)
+                .setHspAlignLen(227)
+                .setHspQseq("CTGACGACAGCCATGCACCACCTGTCTCGACTTTCCCCCGAAGGGCACCTAATGTATCTCTACCTCGTTAGTCGGATGTCAAGACCTGGTAAGGTTTTTTCGCGTATCTTCGAATTAAACCACATACTCCACTGCTTGTGCGG-CCCCCGTCAATTCCTTTGAGTTTCAACCTTGCGGCCGTACTCCC-AGGTGGA-TACTTATTGTGTTAACTCCGGCACGGAAGG")
+                .setHspHseq("CTGACGACAACCATGCACCACCTGTCTCAACTTTCCCC-GAAGGGCACCTAATGTATCTCTACTTCGTTAGTTGGATGTCAAGACCTGGTAAGGTT-CTTCGCGTTGCTTCGAATTAAACCACATACTCCACTGCTTGTGCGGGCCCCCGTCAATTCCTTTGAGTTTCAACCTTGCGGTCGTACTCCCCAGGTGGATTACTTATTGTGTTAACTCCGGCACAGAAGG")
+                .setHspIdentityString("||||||||| |||||||||||||||||| ||||||||| |||||||||||||||||||||||| |||||||| |||||||||||||||||||||||  |||||||  |||||||||||||||||||||||||||||||||||| |||||||||||||||||||||||||||||||||| ||||||||| ||||||| |||||||||||||||||||||||| |||||")
+                .setSequenceClass(DNASequence.class)
+                .createBlastHsp();
+        SequencePair<ProteinSequence,AminoAcidCompound> aln4 = o4.getAlignment();
     }
     
 }

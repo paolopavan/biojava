@@ -24,7 +24,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import org.biojava.nbio.core.alignment.SimpleAlignedSequence;
 import org.biojava.nbio.core.alignment.SimpleSequencePair;
 import org.biojava.nbio.core.alignment.template.AlignedSequence.Step;
@@ -75,7 +74,7 @@ public abstract class Hsp <S extends Sequence<C>, C extends Compound> {
     private Double percentageIdentity = null;
     private Integer mismatchCount = null;
     private SimpleSequencePair<S, C> returnAln;
-    private Class sequenceClass;
+    private Class<S> sequenceClass;
 
     @Override
     public int hashCode() {
@@ -133,22 +132,24 @@ public abstract class Hsp <S extends Sequence<C>, C extends Compound> {
     private Sequence<C> getSequence(String gappedSequenceString){
         if (gappedSequenceString == null) return null;
         
-        Sequence returnSeq = null;
+        S returnSeq = null;
         String sequenceString = gappedSequenceString.replace("-", "");
         
         try {
             if (sequenceClass == null){
                 // try to guess
                 if (sequenceString.matches("^[ACTG]+$")) 
-                    returnSeq = new DNASequence(sequenceString, DNACompoundSet.getDNACompoundSet());
+                    returnSeq = (S)new DNASequence(sequenceString, DNACompoundSet.getDNACompoundSet());
                 else if (sequenceString.matches("^[ACUG]+$"))
-                    returnSeq = new RNASequence(sequenceString, DNACompoundSet.getDNACompoundSet());
+                    returnSeq = (S)new RNASequence(sequenceString, RNACompoundSet.getRNACompoundSet());
                 else
-                    returnSeq = new ProteinSequence(sequenceString, AminoAcidCompoundSet.getAminoAcidCompoundSet());
+                    returnSeq = (S)new ProteinSequence(sequenceString, AminoAcidCompoundSet.getAminoAcidCompoundSet());
             } else {
                 //get constructor that takes a String as argument
                 Constructor constructor = sequenceClass.getConstructor(String.class);
-                returnSeq = (Sequence) constructor.newInstance(sequenceString);
+                //returnSeq = (Sequence) constructor.newInstance(sequenceString);
+                S s = sequenceClass.cast(constructor.newInstance(sequenceString));
+                returnSeq = s;
             }
         } catch (CompoundNotFoundException ex) {
             logger.error("Unexpected error: cannot not find compound when creating Sequence object from Hsp", ex);
@@ -165,8 +166,12 @@ public abstract class Hsp <S extends Sequence<C>, C extends Compound> {
         } catch (InvocationTargetException ex) {
             logger.error("Unexpected error: cannot build Sequence object from Hsp");
         }
+        
+        if (sequenceClass != null && !sequenceClass.isInstance(returnSeq)) throw new IllegalStateException("Paolo");
+        
         return returnSeq;
     }
+    
     
     private List<Step> getAlignmentsSteps(String gappedSequenceString){
         List<Step> returnList = new ArrayList<Step>();
@@ -266,7 +271,7 @@ public abstract class Hsp <S extends Sequence<C>, C extends Compound> {
         return null;
     }
 
-    protected Hsp(int hspNum, double hspBitScore, int hspScore, double hspEvalue, int hspQueryFrom, int hspQueryTo, int hspHitFrom, int hspHitTo, int hspQueryFrame, int hspHitFrame, int hspIdentity, int hspPositive, int hspGaps, int hspAlignLen, String hspQseq, String hspHseq, String hspIdentityString, Double percentageIdentity, Integer mismatchCount, Class sequenceClass) {
+    protected Hsp(int hspNum, double hspBitScore, int hspScore, double hspEvalue, int hspQueryFrom, int hspQueryTo, int hspHitFrom, int hspHitTo, int hspQueryFrame, int hspHitFrame, int hspIdentity, int hspPositive, int hspGaps, int hspAlignLen, String hspQseq, String hspHseq, String hspIdentityString, Double percentageIdentity, Integer mismatchCount, Class<S> sequenceClass) {
         this.hspNum = hspNum;
         this.hspBitScore = hspBitScore;
         this.hspScore = hspScore;

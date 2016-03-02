@@ -34,13 +34,10 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathException;
-import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.ProteinSequence;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompoundSet;
-import org.biojava.nbio.core.sequence.compound.DNACompoundSet;
-import org.biojava.nbio.core.sequence.template.Compound;
-import org.biojava.nbio.core.sequence.template.CompoundSet;
+import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
+import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
 import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.util.XMLHelper;
 import org.slf4j.LoggerFactory;
@@ -95,9 +92,9 @@ public class BlastXMLParser implements ResultFactory {
         // create mappings between sequences and blast id
         mapIds();
         
-        ArrayList<Result> resultsCollection;
-        ArrayList<Hit> hitsCollection;
-        ArrayList<Hsp> hspsCollection;
+        List<Result> resultsCollection;
+        List<Hit> hitsCollection;
+        List<Hsp> hspsCollection;
         
         try {
             // select top level elements
@@ -260,8 +257,17 @@ public class BlastXMLParser implements ResultFactory {
 }
 
 
-class BlastHsp extends org.biojava.nbio.core.search.io.Hsp {
-    public BlastHsp(int hspNum, double hspBitScore, int hspScore, double hspEvalue, int hspQueryFrom, int hspQueryTo, int hspHitFrom, int hspHitTo, int hspQueryFrame, int hspHitFrame, int hspIdentity, int hspPositive, int hspGaps, int hspAlignLen, String hspQseq, String hspHseq, String hspIdentityString, Double percentageIdentity, Integer mismatchCount, Class sequenceClass) {
+class BlastProteinHsp<S extends ProteinSequence> extends org.biojava.nbio.core.search.io.Hsp<S,AminoAcidCompound> {
+    Class<ProteinSequence> sequenceClass;
+    public BlastProteinHsp(int hspNum, double hspBitScore, int hspScore, double hspEvalue, int hspQueryFrom, int hspQueryTo, int hspHitFrom, int hspHitTo, int hspQueryFrame, int hspHitFrame, int hspIdentity, int hspPositive, int hspGaps, int hspAlignLen, String hspQseq, String hspHseq, String hspIdentityString, Double percentageIdentity, Integer mismatchCount, Class<S> sequenceClass) {
+        super(hspNum, hspBitScore, hspScore, hspEvalue, hspQueryFrom, hspQueryTo, hspHitFrom, hspHitTo, hspQueryFrame, hspHitFrame, hspIdentity, hspPositive, hspGaps, hspAlignLen, hspQseq, hspHseq, hspIdentityString, percentageIdentity, mismatchCount, sequenceClass);
+    }
+    
+}
+
+class BlastNucleotideHsp<S extends DNASequence> extends org.biojava.nbio.core.search.io.Hsp<DNASequence,NucleotideCompound> {
+    Class<DNASequence> sequenceClass;
+    public BlastNucleotideHsp(int hspNum, double hspBitScore, int hspScore, double hspEvalue, int hspQueryFrom, int hspQueryTo, int hspHitFrom, int hspHitTo, int hspQueryFrame, int hspHitFrame, int hspIdentity, int hspPositive, int hspGaps, int hspAlignLen, String hspQseq, String hspHseq, String hspIdentityString, Double percentageIdentity, Integer mismatchCount, Class<DNASequence> sequenceClass) {
         super(hspNum, hspBitScore, hspScore, hspEvalue, hspQueryFrom, hspQueryTo, hspHitFrom, hspHitTo, hspQueryFrame, hspHitFrame, hspIdentity, hspPositive, hspGaps, hspAlignLen, hspQseq, hspHseq, hspIdentityString, percentageIdentity, mismatchCount, sequenceClass);
     }
     
