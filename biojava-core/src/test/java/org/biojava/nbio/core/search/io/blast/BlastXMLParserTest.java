@@ -90,7 +90,7 @@ public class BlastXMLParserTest {
         List<Result> result = instance.createObjects(1e-10);
         
         // test with random manual selected results
-        BlastHsp hsp1hit1res1 = new BlastHspBuilder()
+        Hsp hsp1hit1res1 = new BlastHspBuilder()
                 .setHspNum(1)
                 .setHspBitScore(2894.82)
                 .setHspScore(1567)

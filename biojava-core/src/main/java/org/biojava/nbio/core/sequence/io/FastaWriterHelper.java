@@ -33,6 +33,7 @@ import org.biojava.nbio.core.sequence.template.Sequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,10 +51,10 @@ public class FastaWriterHelper {
      *
      * @param file
      * @param proteinSequences
-     * @throws Exception
+     * @throws java.io.IOException
      */
     public static void writeProteinSequence(File file,
-            Collection<ProteinSequence> proteinSequences) throws Exception {
+            Collection<ProteinSequence> proteinSequences) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         BufferedOutputStream bo = new BufferedOutputStream(outputStream);
         writeProteinSequence(bo, proteinSequences);
@@ -65,11 +66,11 @@ public class FastaWriterHelper {
      * Write collection of protein sequences to a stream
      * @param outputStream
      * @param proteinSequences
-     * @throws Exception
+     * @throws java.io.IOException
      */
 
     public static void writeProteinSequence(OutputStream outputStream,
-            Collection<ProteinSequence> proteinSequences) throws Exception {
+            Collection<ProteinSequence> proteinSequences) throws IOException {
 
         FastaWriter<ProteinSequence, AminoAcidCompound> fastaWriter = new FastaWriter<ProteinSequence, AminoAcidCompound>(
                 outputStream, proteinSequences,
@@ -82,10 +83,10 @@ public class FastaWriterHelper {
      * Write a collection of GeneSequences to a file where if the gene is negative strand it will flip and complement the sequence
      * @param file
      * @param geneSequences
-     * @throws Exception
+     * @throws IOException
      */
 
-    public static void writeGeneSequence(File file, Collection<GeneSequence> geneSequences,boolean showExonUppercase) throws Exception {
+    public static void writeGeneSequence(File file, Collection<GeneSequence> geneSequences,boolean showExonUppercase) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         BufferedOutputStream bo = new BufferedOutputStream(outputStream);
         writeGeneSequence(bo, geneSequences,showExonUppercase);
@@ -97,10 +98,10 @@ public class FastaWriterHelper {
      * Write a collection of GeneSequences to a file where if the gene is negative strand it will flip and complement the sequence
      * @param outputStream
      * @param dnaSequences
-     * @throws Exception
+     * @throws IOException
      */
 
-    public static void writeGeneSequence(OutputStream outputStream, Collection<GeneSequence> geneSequences,boolean showExonUppercase) throws Exception {
+    public static void writeGeneSequence(OutputStream outputStream, Collection<GeneSequence> geneSequences,boolean showExonUppercase) throws IOException {
         FastaGeneWriter fastaWriter = new FastaGeneWriter(
                 outputStream, geneSequences,
                 new GenericFastaHeaderFormat<GeneSequence, NucleotideCompound>(),showExonUppercase);
@@ -113,10 +114,10 @@ public class FastaWriterHelper {
      * Write a collection of NucleotideSequences to a file
      * @param file
      * @param dnaSequences
-     * @throws Exception
+     * @throws IOException
      */
 
-    public static void writeNucleotideSequence(File file, Collection<DNASequence> dnaSequences) throws Exception {
+    public static void writeNucleotideSequence(File file, Collection<DNASequence> dnaSequences) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         BufferedOutputStream bo = new BufferedOutputStream(outputStream);
         writeNucleotideSequence(bo, dnaSequences);
@@ -128,10 +129,10 @@ public class FastaWriterHelper {
      * Write a collection of NucleotideSequences to a file
      * @param outputStream
      * @param dnaSequences
-     * @throws Exception
+     * @throws IOException
      */
 
-    public static void writeNucleotideSequence(OutputStream outputStream, Collection<DNASequence> dnaSequences) throws Exception {
+    public static void writeNucleotideSequence(OutputStream outputStream, Collection<DNASequence> dnaSequences) throws IOException {
         FastaWriter<DNASequence, NucleotideCompound> fastaWriter = new FastaWriter<DNASequence, NucleotideCompound>(
                 outputStream, dnaSequences,
                 new GenericFastaHeaderFormat<DNASequence, NucleotideCompound>());
@@ -143,9 +144,9 @@ public class FastaWriterHelper {
      * Write a sequence to a file
      * @param file
      * @param sequence
-     * @throws Exception
+     * @throws IOException
      */
-    public static void writeSequence(File file, Sequence<?> sequence) throws Exception {
+    public static void writeSequence(File file, Sequence<?> sequence) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         BufferedOutputStream bo = new BufferedOutputStream(outputStream);
         writeSequences(bo, singleSeqToCollection(sequence));
@@ -157,9 +158,9 @@ public class FastaWriterHelper {
      * Write a sequence to OutputStream
      * @param outputStream
      * @param sequence
-     * @throws Exception
+     * @throws IOException
      */
-    public static void writeSequence(OutputStream outputStream, Sequence<?> sequence) throws Exception {
+    public static void writeSequence(OutputStream outputStream, Sequence<?> sequence) throws IOException {
         writeSequences(outputStream, singleSeqToCollection(sequence));
     }
 
@@ -182,10 +183,10 @@ public class FastaWriterHelper {
      *
      * @param outputStream Stream to write to; can be System.out
      * @param sequences The sequences to write out
-     * @throws Exception Thrown normally thanks to IO problems
+     * @throws IOException Thrown normally thanks to IO problems
      */
     public static void writeSequences(OutputStream outputStream,
-            Collection<Sequence<?>> sequences) throws Exception {
+            Collection<Sequence<?>> sequences) throws IOException {
 
         FastaHeaderFormatInterface<Sequence<?>, Compound> fhfi =
                 new FastaHeaderFormatInterface<Sequence<?>, Compound>() {

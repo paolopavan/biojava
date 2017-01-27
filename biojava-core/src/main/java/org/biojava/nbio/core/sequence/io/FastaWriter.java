@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -90,11 +91,7 @@ public class FastaWriter<S extends Sequence<?>, C extends Compound> {
         lineSep = lineSeparator.getBytes();
     }
 
-    public void process() throws Exception {
-       // boolean closeit = false;
-       
-        
-
+    public void process() throws IOException {
         for (S sequence : sequences) {
             String header = headerFormat.getHeader(sequence);
             os.write('>');

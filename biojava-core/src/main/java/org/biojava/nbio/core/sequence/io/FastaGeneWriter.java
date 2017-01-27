@@ -22,6 +22,7 @@
 
 package org.biojava.nbio.core.sequence.io;
 
+import java.io.IOException;
 import org.biojava.nbio.core.sequence.*;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
 import org.biojava.nbio.core.sequence.io.template.FastaHeaderFormatInterface;
@@ -74,9 +75,9 @@ public class FastaGeneWriter {
     }
 /**
  *
- * @throws Exception
+ * @throws java.io.IOException
  */
-    public void process() throws Exception {
+    public void process() throws IOException {
         byte[] lineSep = System.getProperty("line.separator").getBytes();
 
         for (GeneSequence sequence : sequences) {

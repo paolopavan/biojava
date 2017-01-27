@@ -105,7 +105,7 @@ public class BlastTabularParserTest {
         
         List<Result> results = instance.createObjects(1e-10);
         
-        BlastHsp hsp1Hit1Res1 = new BlastHspBuilder()
+        Hsp hsp1Hit1Res1 = new BlastHspBuilder()
                 .setHspNum(1)
                 .setPercentageIdentity(100.0/100)
                 .setHspAlignLen(1567)
@@ -119,7 +119,7 @@ public class BlastTabularParserTest {
                 .setHspBitScore(2894)
                 .createBlastHsp();
         
-        BlastHsp hsp1Hit1Res2 = new BlastHspBuilder()
+        Hsp hsp1Hit1Res2 = new BlastHspBuilder()
                 .setHspNum(1)
                 .setPercentageIdentity(100.0/100)
                 .setHspAlignLen(1567)
