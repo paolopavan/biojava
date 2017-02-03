@@ -27,6 +27,8 @@ import java.util.List;
 import org.biojava.nbio.core.search.io.Hit;
 import org.biojava.nbio.core.search.io.Hsp;
 import org.biojava.nbio.core.search.io.Result;
+import org.biojava.nbio.core.sequence.template.Compound;
+import org.biojava.nbio.core.sequence.template.Sequence;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -165,7 +167,7 @@ public class BlastXMLParserTest {
     @Test
     @Ignore public void testSetQueryReferences() {
         System.out.println("setQueryReferences");
-        List<org.biojava.nbio.core.sequence.template.Sequence> sequences = null;
+        List<Sequence<Compound>> sequences = null;
         BlastXMLParser instance = new BlastXMLParser();
         instance.setQueryReferences(sequences);
         // TODO review the generated test code and remove the default call to fail.
@@ -178,7 +180,7 @@ public class BlastXMLParserTest {
     @Test
     @Ignore public void testSetDatabaseReferences() {
         System.out.println("setDatabaseReferences");
-        List<org.biojava.nbio.core.sequence.template.Sequence> sequences = null;
+        List<Sequence<Compound>> sequences = null;
         BlastXMLParser instance = new BlastXMLParser();
         instance.setDatabaseReferences(sequences);
         // TODO review the generated test code and remove the default call to fail.

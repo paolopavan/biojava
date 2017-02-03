@@ -35,6 +35,7 @@ import org.biojava.nbio.core.search.io.Hit;
 import org.biojava.nbio.core.search.io.Hsp;
 import org.biojava.nbio.core.search.io.Result;
 import org.biojava.nbio.core.search.io.ResultFactory;
+import org.biojava.nbio.core.sequence.template.Compound;
 import org.biojava.nbio.core.sequence.template.Sequence;
 
 /**
@@ -227,7 +228,7 @@ public class BlastTabularParser implements ResultFactory {
      * @param sequences 
      */
     @Override
-    public void setQueryReferences(List<Sequence> sequences) {
+    public void setQueryReferences(List<Sequence<Compound>> sequences) {
         throw new UnsupportedOperationException("Not supported for this parser.");
     }
     /**
@@ -237,7 +238,7 @@ public class BlastTabularParser implements ResultFactory {
      * @param sequences 
      */
     @Override
-    public void setDatabaseReferences(List<Sequence> sequences) {
+    public void setDatabaseReferences(List<Sequence<Compound>> sequences) {
         throw new UnsupportedOperationException("Not supported for this parser.");
     }
      /**
